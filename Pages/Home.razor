@@ -1,0 +1,45 @@
+﻿@page "/"
+@using MudBlazor
+@using ProjetoLeads.Frontend.Models
+@using ProjetoLeads.Frontend.Services
+@inject ApiService ApiService
+
+<MudText Typo="Typo.h3" GutterBottom="true">Leads</MudText>
+
+@if (dados == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="dados" Hover="true" Striped="true">
+        <HeaderContent>
+            <MudTh>CNPJ</MudTh>
+            <MudTh>Razão Social</MudTh>
+            <MudTh>CEP</MudTh>
+            <MudTh>Estado</MudTh>
+            <MudTh>Ações</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Cnpj</MudTd>
+            <MudTd>@context.RazaoSocial</MudTd>
+            <MudTd>@context.Cep</MudTd>
+            <MudTd>@context.Estado</MudTd>
+            <MudTd>
+                
+                    <MudButton Icon="MudIcons.Edit" Variant="Variant.Filled" Color="Color.Primary">Salvar</MudButton>
+                    <MudButton Icon="MudIcons.Delete" Variant="Variant.Filled" Color="Color.Secondary">Apagar</MudButton>
+                
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<LeadModel> dados;
+
+    protected override async Task OnInitializedAsync()
+    {
+        dados = await ApiService.GetDadosAsync();
+    }
+}
