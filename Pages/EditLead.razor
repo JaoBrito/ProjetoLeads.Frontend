@@ -1,0 +1,119 @@
+﻿@page "/edit-lead/{id:int}"
+@using MudBlazor
+@using ProjetoLeads.Frontend.Models
+@using ProjetoLeads.Frontend.Services
+@inject NavigationManager Navigation
+@inject ApiService ApiService
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudContainer>
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h4">Alterar Cadastro de Lead</MudText>
+            <MudForm>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="CNPJ" @bind-Value="lead.Cnpj" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Razão Social" @bind-Value="lead.RazaoSocial" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="CEP" @bind-Value="lead.Cep" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudButton OnClick="BuscarCEP" Color="Color.Primary">Pesquisar</MudButton>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Endereço" @bind-Value="lead.Endereco" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudTextField Label="Número" @bind-Value="lead.Numero" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Complemento" @bind-Value="lead.Complemento" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Bairro" @bind-Value="lead.Bairro" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Cidade" @bind-Value="lead.Cidade" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Estado" @bind-Value="lead.Estado" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton OnClick="SalvarAlteracao" Color="Color.Success" Variant="Variant.Filled">Salvar Alterações</MudButton>
+                        <MudButton OnClick="Voltar" Color="Color.Secondary" Variant="Variant.Filled">Voltar</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private LeadModel lead = new LeadModel();
+    private bool isEnderecoPreenchido = false;  // Você pode atualizar isso conforme a lógica
+
+    protected override async Task OnInitializedAsync()
+    {
+        lead = await ApiService.GetLeadByIdAsync(Id);
+    }
+
+    private void Voltar( )
+    {
+        Navigation.NavigateTo( "/" );  // Redireciona para a lista de leads
+    }
+
+    private async Task SalvarAlteracao()
+    {
+        var success = await ApiService.UpdateLeadAsync(Id, lead);
+        if (success)
+        {
+            Navigation.NavigateTo("/"); 
+        }
+        else
+        {
+            Snackbar.Add( "Erro ao salvar alterações. Por favor, tente novamente.", Severity.Error );
+        }
+    }
+
+    private async Task BuscarCEP( )
+    {
+        if ( !string.IsNullOrEmpty( lead.Cep ) )
+        {
+            try
+            {
+                var cepResponse = await Http.GetFromJsonAsync<ViaCepResponse>( $"https://viacep.com.br/ws/{lead.Cep}/json/" );
+                if ( cepResponse != null && !cepResponse.Erro )
+                {
+                    lead.Endereco = cepResponse.Logradouro;
+                    lead.Bairro = cepResponse.Bairro;
+                    lead.Cidade = cepResponse.Localidade;
+                    lead.Estado = cepResponse.Uf;
+                    isEnderecoPreenchido = true;
+                }
+                else
+                {
+                    isEnderecoPreenchido = false;
+                }
+            }
+            catch
+            {
+                isEnderecoPreenchido = false;
+            }
+        }
+    }
+
+    private class ViaCepResponse
+    {
+        public string Logradouro { get; set; }
+        public string Bairro { get; set; }
+        public string Localidade { get; set; }
+        public string Uf { get; set; }
+        public bool Erro { get; set; }
+    }
+}

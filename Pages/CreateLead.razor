@@ -1,0 +1,112 @@
+﻿@page "/create-lead"
+@using MudBlazor
+@using ProjetoLeads.Frontend.Models
+@using ProjetoLeads.Frontend.Services
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<MudContainer>
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h4">Cadastro de Leads</MudText>
+            <MudForm>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="CNPJ" @bind-Value="lead.Cnpj" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Razão Social" @bind-Value="lead.RazaoSocial" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="CEP" @bind-Value="lead.Cep" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudButton OnClick="BuscarCEP" Color="Color.Primary">Pesquisar</MudButton>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Endereço" @bind-Value="lead.Endereco" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudTextField Label="Número" @bind-Value="lead.Numero" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Complemento" @bind-Value="lead.Complemento" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Bairro" @bind-Value="lead.Bairro" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Cidade" @bind-Value="lead.Cidade" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Estado" @bind-Value="lead.Estado" Required="true" Disabled="isEnderecoPreenchido" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton OnClick="SalvarLead" Color="Color.Success">Salvar</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private LeadModel lead = new();
+    private bool isEnderecoPreenchido = true;
+
+    private async Task BuscarCEP()
+    {
+        if (!string.IsNullOrEmpty(lead.Cep))
+        {
+            try
+            {
+                var cepResponse = await Http.GetFromJsonAsync<ViaCepResponse>($"https://viacep.com.br/ws/{lead.Cep}/json/");
+                if (cepResponse != null && !cepResponse.Erro)
+                {
+                    lead.Endereco = cepResponse.Logradouro;
+                    lead.Bairro = cepResponse.Bairro;
+                    lead.Cidade = cepResponse.Localidade;
+                    lead.Estado = cepResponse.Uf;
+                    isEnderecoPreenchido = true;
+                }
+                else
+                {
+                    isEnderecoPreenchido = false;
+                }
+            }
+            catch
+            {
+                isEnderecoPreenchido = false;
+            }
+        }
+    }
+
+    private async Task SalvarLead()
+    {
+        try
+        {
+            var response = await ApiService.CreateLeadAsync( lead );
+
+            if (response == null)
+            {
+                Console.WriteLine("Erro ao salvar lead.");
+            }
+
+            Console.WriteLine("Lead salvo com sucesso!");
+            Navigation.NavigateTo( "/" );
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao salvar lead: {ex.Message}");
+        }
+    }
+
+    private class ViaCepResponse
+    {
+        public string Logradouro { get; set; }
+        public string Bairro { get; set; }
+        public string Localidade { get; set; }
+        public string Uf { get; set; }
+        public bool Erro { get; set; }
+    }
+}

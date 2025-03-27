@@ -1,0 +1,63 @@
+﻿@page "/view-lead/{id:int}"
+@using MudBlazor
+@using ProjetoLeads.Frontend.Models
+@using ProjetoLeads.Frontend.Services
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+
+<MudContainer>
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h4">Consulta de Lead</MudText>
+            <MudForm>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="CNPJ" Value="lead.Cnpj" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Razão Social" Value="lead.RazaoSocial" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="CEP" Value="lead.Cep" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Endereço" Value="lead.Endereco" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudTextField Label="Número" Value="lead.Numero" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Complemento" Value="lead.Complemento" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Bairro" Value="lead.Bairro" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Cidade" Value="lead.Cidade" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Estado" Value="lead.Estado" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton OnClick="Voltar" Variant="Variant.Filled"  Color="Color.Secondary">Voltar</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private LeadModel lead = new LeadModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        lead = await ApiService.GetLeadByIdAsync(Id);
+    }
+
+    private void Voltar()
+    {
+        Navigation.NavigateTo("/");  // Redireciona para a lista de leads
+    }
+}

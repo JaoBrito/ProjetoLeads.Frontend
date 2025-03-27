@@ -3,10 +3,15 @@
 @using ProjetoLeads.Frontend.Models
 @using ProjetoLeads.Frontend.Services
 @inject ApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-<MudText Typo="Typo.h3" GutterBottom="true">Leads</MudText>
+<div style="display:flex;justify-content:space-around;align-content:center">
+    <MudText Typo="Typo.h3" GutterBottom="true">Cadastro Leads (Lista)</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" Style="height:50px" OnClick='() => Navigation.NavigateTo("/create-lead")'>Novo Lead</MudButton>
+</div>
 
-@if (dados == null)
+@if ( dados == null )
 {
     <MudProgressCircular Indeterminate="true" />
 }
@@ -14,11 +19,11 @@ else
 {
     <MudTable Items="dados" Hover="true" Striped="true">
         <HeaderContent>
-            <MudTh>CNPJ</MudTh>
-            <MudTh>Razão Social</MudTh>
-            <MudTh>CEP</MudTh>
-            <MudTh>Estado</MudTh>
-            <MudTh>Ações</MudTh>
+            <MudTh Style="background-color:antiquewhite">CNPJ</MudTh>
+            <MudTh Style="background-color:antiquewhite">Razão Social</MudTh>
+            <MudTh Style="background-color:antiquewhite">CEP</MudTh>
+            <MudTh Style="background-color:antiquewhite">Estado</MudTh>
+            <MudTh Style="background-color:antiquewhite">Ações</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Cnpj</MudTd>
@@ -26,10 +31,9 @@ else
             <MudTd>@context.Cep</MudTd>
             <MudTd>@context.Estado</MudTd>
             <MudTd>
-                
-                    <MudButton Icon="MudIcons.Edit" Variant="Variant.Filled" Color="Color.Primary">Salvar</MudButton>
-                    <MudButton Icon="MudIcons.Delete" Variant="Variant.Filled" Color="Color.Secondary">Apagar</MudButton>
-                
+                <MudButton Icon="MudIcons.Delete" Variant="Variant.Filled" Color="Color.Warning" OnClick='() => Navigation.NavigateTo($"/edit-lead/{context.Id}")'>Alterar</MudButton>
+                <MudButton Icon="MudIcons.Delete" Variant="Variant.Filled" Color="Color.Info" OnClick='() => Navigation.NavigateTo($"/view-lead/{context.Id}")'>Consultar</MudButton>
+                <MudButton Icon="MudIcons.Delete" Variant="Variant.Filled" Color="Color.Error" OnClick="() => DeleteLead(context.Id)">Excluir</MudButton>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -38,8 +42,28 @@ else
 @code {
     private List<LeadModel> dados;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync( )
     {
-        dados = await ApiService.GetDadosAsync();
+        dados = await ApiService.GetLeadAsync();
+    }
+
+
+    private async Task DeleteLead( int id )
+    {
+        bool confirmDelete = await JS.InvokeAsync<bool>( "confirm", "Tem certeza que deseja excluir este Lead?" );
+
+        if ( !confirmDelete )
+        {
+            await JS.InvokeVoidAsync( "alert", "Lead não deletado!" );
+            return;
+        }
+
+        var success = await ApiService.DeleteLeadAsync( id );
+
+        if ( success )
+        {
+            dados.RemoveAll( l => l.Id == id );
+            StateHasChanged();
+        }
     }
 }
