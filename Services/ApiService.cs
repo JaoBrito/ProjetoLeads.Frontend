@@ -22,16 +22,20 @@ namespace ProjetoLeads.Frontend.Services
             return await _httpClient.GetFromJsonAsync<LeadModel>( $"api/leads/{id}" );
         }
 
-        public async Task<LeadModel> CreateLeadAsync( LeadModel lead )
+        public async Task<string> CreateLeadAsync( LeadModel lead )
         {
             var response = await _httpClient.PostAsJsonAsync( "api/leads", lead );
 
             if ( response.IsSuccessStatusCode )
             {
-                return await response.Content.ReadFromJsonAsync<LeadModel>();
+                var createdLead = await response.Content.ReadFromJsonAsync<LeadModel>();
+                return null;
             }
-
-            return null;
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                return errorMessage; 
+            }
         }
 
         public async Task<bool> UpdateLeadAsync( int id, LeadModel lead )

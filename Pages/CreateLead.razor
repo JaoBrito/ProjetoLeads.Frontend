@@ -5,6 +5,7 @@
 @inject ApiService ApiService
 @inject NavigationManager Navigation
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <MudContainer>
     <MudCard>
@@ -43,7 +44,8 @@
                         <MudTextField Label="Estado" @bind-Value="lead.Estado" Required="true" Disabled="isEnderecoPreenchido" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudButton OnClick="SalvarLead" Color="Color.Success">Salvar</MudButton>
+                        <MudButton OnClick="SalvarLead" Color="Color.Success" Variant="Variant.Filled">Salvar</MudButton>
+                        <MudButton OnClick="Voltar" Color="Color.Secondary" Variant="Variant.Filled">Voltar</MudButton>
                     </MudItem>
                 </MudGrid>
             </MudForm>
@@ -55,14 +57,19 @@
     private LeadModel lead = new();
     private bool isEnderecoPreenchido = true;
 
-    private async Task BuscarCEP()
+    private void Voltar( )
     {
-        if (!string.IsNullOrEmpty(lead.Cep))
+        Navigation.NavigateTo( "/" );
+    }
+
+    private async Task BuscarCEP( )
+    {
+        if ( !string.IsNullOrEmpty( lead.Cep ) )
         {
             try
             {
-                var cepResponse = await Http.GetFromJsonAsync<ViaCepResponse>($"https://viacep.com.br/ws/{lead.Cep}/json/");
-                if (cepResponse != null && !cepResponse.Erro)
+                var cepResponse = await Http.GetFromJsonAsync<ViaCepResponse>( $"https://viacep.com.br/ws/{lead.Cep}/json/" );
+                if ( cepResponse != null && !cepResponse.Erro )
                 {
                     lead.Endereco = cepResponse.Logradouro;
                     lead.Bairro = cepResponse.Bairro;
@@ -82,23 +89,22 @@
         }
     }
 
-    private async Task SalvarLead()
+    private async Task SalvarLead( )
     {
-        try
-        {
-            var response = await ApiService.CreateLeadAsync( lead );
 
-            if (response == null)
-            {
-                Console.WriteLine("Erro ao salvar lead.");
-            }
+        var response = await ApiService.CreateLeadAsync( lead );
+        Console.WriteLine( response );
 
-            Console.WriteLine("Lead salvo com sucesso!");
-            Navigation.NavigateTo( "/" );
-        } catch (Exception ex)
+        if ( response != null )
         {
-            Console.WriteLine($"Erro ao salvar lead: {ex.Message}");
+            Console.WriteLine( "Erro ao salvar lead." );
+            await JS.InvokeVoidAsync( "alert", response );
+            return;
         }
+
+        Console.WriteLine( "Lead salvo com sucesso!" );
+        Navigation.NavigateTo( "/" );
+
     }
 
     private class ViaCepResponse
