@@ -56,7 +56,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private LeadModel lead = new LeadModel();
-    private bool isEnderecoPreenchido = false;  // Você pode atualizar isso conforme a lógica
+    private bool isEnderecoPreenchido = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,7 +65,7 @@
 
     private void Voltar( )
     {
-        Navigation.NavigateTo( "/" );  // Redireciona para a lista de leads
+        Navigation.NavigateTo( "/" );
     }
 
     private async Task SalvarAlteracao()
